@@ -26,10 +26,25 @@ Além da tabela na conversa, TODA lista com 5+ contatos deve ser entregue també
 (computador ou celular) e usa como painel de trabalho.
 
 **Como gerar:**
-1. Crie UM arquivo `prospeccao-<segmento>-<cidade>.html`, auto-contido (CSS e JS inline,
-   nenhuma dependência externa, nenhuma chamada de rede).
-2. Visual: fundo escuro elegante (#141414), destaques dourados (#d4af37), cartão por contato,
-   título com segmento + cidade + data da pesquisa. Mobile-first (funciona bem no celular).
+1. Crie UM arquivo `<segmento>-<cidade>.html` (ex.: `veterinarias-sao-paulo.html`), auto-contido
+   (CSS e JS inline, nenhuma dependência externa, nenhuma chamada de rede), e salve em
+   **`/data/projetos/prospeccao/`** (crie a pasta se não existir). Essa pasta já é servida pelo
+   site do mentorado: a página fica no ar em
+   **`https://<subdominio-do-mentorado>.bravosdigital.com.br/prospeccao/<arquivo>.html`** —
+   entregue esse LINK pro mentorado (não o arquivo).
+   ⚠️ Tudo em `/data/projetos` é PÚBLICO por design: apenas dados públicos da pesquisa entram
+   na página — nunca dado sensível, credencial ou informação privada do mentorado.
+2. Visual PREMIUM (capricho é requisito, não enfeite):
+   - fundo escuro profundo (#0e0e10 → #17171a em gradiente sutil), destaques dourados (#d4af37/#e6c968),
+     texto claro com hierarquia (título forte, metadados discretos);
+   - tipografia do sistema bem usada: `font-family: -apple-system, 'Segoe UI', Roboto, sans-serif`,
+     título 28-32px bold, corpo 15-16px, line-height 1.5;
+   - cartões com borda 1px rgba(212,175,55,.18), raio 14-16px, sombra suave, hover/active com
+     leve elevação; transições de 150-250ms em opacidade e transform (nunca em width/height);
+   - cabeçalho da página com segmento + cidade + data da pesquisa e uma barra de progresso dourada
+     de contatados; contador em números tabulares;
+   - botões/checkbox com área de toque ≥44px, foco visível, e ícones SVG inline (NUNCA emoji como ícone);
+   - mobile-first de verdade: 1 coluna no celular, grid responsivo no desktop, sem scroll horizontal.
 3. Cada contato é um cartão com:
    - Nome, telefone público (link `tel:`), Instagram (link), site (link), fonte e observação da pesquisa;
    - ☑️ **checkbox "Já entrei em contato"** — cartão marcado fica visualmente "apagado" (opacidade menor + selo ✓);
@@ -40,8 +55,8 @@ Além da tabela na conversa, TODA lista com 5+ contatos deve ser entregue també
    (se abrir em outro aparelho, as marcações não acompanham o arquivo).
 5. No topo da página: contador "X de Y contatados", campo de busca por nome e filtro
    (todos / pendentes / contatados).
-6. Entregue o arquivo pro mentorado pelo canal em que ele pediu (documento no WhatsApp ou painel)
-   e explique em 2 linhas como usar.
+6. Entregue o LINK da página pro mentorado pelo canal em que ele pediu e explique em 2 linhas
+   como usar (marcar contatado + anotar; as marcações ficam salvas no navegador dele).
 
 **Teste antes de entregar:** abra mentalmente o fluxo — marcar, anotar, fechar, reabrir.
 O JS deve ler o localStorage no load e reaplicar estado. Sem framework, só vanilla JS.
