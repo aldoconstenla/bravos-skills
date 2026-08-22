@@ -19,3 +19,29 @@ Pedidos como: "monta uma lista de dentistas em Osasco com telefone", "acha o Ins
 2. Busque em camadas: busca web pelo segmento+cidade → confira site oficial → confira perfil público do Google (avaliações) → Instagram.
 3. Entregue em tabela simples: Nome | Telefone público | Instagram | Site | Fonte | Observação.
 4. Listas grandes: entregue as 10-20 melhores primeiro e pergunte se ele quer mais — qualidade vale mais que volume.
+
+## Entrega em página interativa (padrão a partir de 22/ago/2026)
+Além da tabela na conversa, TODA lista com 5+ contatos deve ser entregue também como
+**página HTML de prospecção** — um arquivo único que o mentorado abre em qualquer navegador
+(computador ou celular) e usa como painel de trabalho.
+
+**Como gerar:**
+1. Crie UM arquivo `prospeccao-<segmento>-<cidade>.html`, auto-contido (CSS e JS inline,
+   nenhuma dependência externa, nenhuma chamada de rede).
+2. Visual: fundo escuro elegante (#141414), destaques dourados (#d4af37), cartão por contato,
+   título com segmento + cidade + data da pesquisa. Mobile-first (funciona bem no celular).
+3. Cada contato é um cartão com:
+   - Nome, telefone público (link `tel:`), Instagram (link), site (link), fonte e observação da pesquisa;
+   - ☑️ **checkbox "Já entrei em contato"** — cartão marcado fica visualmente "apagado" (opacidade menor + selo ✓);
+   - 📝 **campo de anotação livre** (textarea) pro mentorado registrar como foi o contato.
+4. **Persistência:** salve marcações e anotações no `localStorage` do navegador
+   (chave única por página, ex. `prospeccao-<segmento>-<cidade>`, guardando por índice+nome).
+   Ao abrir de novo NO MESMO navegador, tudo volta como estava. Avise o mentorado disso na entrega
+   (se abrir em outro aparelho, as marcações não acompanham o arquivo).
+5. No topo da página: contador "X de Y contatados", campo de busca por nome e filtro
+   (todos / pendentes / contatados).
+6. Entregue o arquivo pro mentorado pelo canal em que ele pediu (documento no WhatsApp ou painel)
+   e explique em 2 linhas como usar.
+
+**Teste antes de entregar:** abra mentalmente o fluxo — marcar, anotar, fechar, reabrir.
+O JS deve ler o localStorage no load e reaplicar estado. Sem framework, só vanilla JS.
