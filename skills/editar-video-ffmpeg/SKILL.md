@@ -22,7 +22,12 @@ O mentorado mandou um vídeo/áudio (ou apontou um arquivo) e pediu: cortar, jun
 - Extrair áudio: `ffmpeg -i in.mp4 -vn -acodec libmp3lame -q:a 2 out-audio.mp3`
 - Comprimir pra WhatsApp: `ffmpeg -i in.mp4 -vf "scale='min(1280,iw)':-2" -c:v libx264 -crf 26 -preset veryfast -c:a aac -b:a 96k -movflags +faststart out-editado.mp4`
 - Converter formato: `ffmpeg -i in.mov -c:v libx264 -c:a aac out-editado.mp4`
-- Legendar (queimar .srt no vídeo): `ffmpeg -i in.mp4 -vf subtitles=legenda.srt out-editado.mp4`
+- Legendar pra REDES SOCIAIS (padrão da casa — queimar .srt com a legenda na zona segura,
+  ~30% de baixo pra cima, pra não brigar com a descrição/arroba do Instagram e os botões do Reels):
+  `ffmpeg -i in.mp4 -vf "subtitles=legenda.srt:force_style='Alignment=2,MarginV=90,Fontsize=20,Outline=2,Shadow=1,Bold=1'" out-editado.mp4`
+  (MarginV=90 sobe a legenda pra ~30% da altura; em vídeo horizontal use MarginV=60.
+  Sempre confira 1 frame do resultado com o ffmpeg -ss X -frames:v 1 antes de entregar.)
+- Legendar colada embaixo (só quando o mentorado PEDIR assim): `ffmpeg -i in.mp4 -vf subtitles=legenda.srt out-editado.mp4`
 - Thumbnail no segundo 3: `ffmpeg -i in.mp4 -ss 3 -frames:v 1 capa.jpg`
 - Acelerar 1.5x: `ffmpeg -i in.mp4 -vf "setpts=PTS/1.5" -af "atempo=1.5" out-editado.mp4`
 
