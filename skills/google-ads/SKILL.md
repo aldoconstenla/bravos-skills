@@ -1,97 +1,115 @@
 ---
 name: google-ads
-description: Conectar o Google Ads do mentorado ao agente e operar as campanhas pela conversa — setup guiado por conta de serviço (sem tela de OAuth) e token de desenvolvedor do próprio mentorado; depois relatórios, diagnóstico, e criação de campanhas, grupos, palavras-chave e anúncios com guardas de segurança. Use quando pedirem "conectar meu Google Ads", "como estão minhas campanhas", "cria uma campanha de pesquisa", "adiciona palavras-chave", "quanto gastei essa semana".
+description: Conectar o Google Ads do mentorado ao agente e operar as campanhas pela conversa. O agente faz o setup (gera os comandos que criam projeto, conta de serviço e chave, descobre os IDs pela API, grava a configuração e testa) e orienta o mentorado só nas liberações que exigem a conta dele (colar no Cloud Shell, dar acesso no Google Ads, pegar o token de desenvolvedor). Depois: relatórios, diagnóstico e criação de campanhas, grupos, palavras-chave e anúncios com guardas. Use quando pedirem "conectar meu Google Ads", "como estão minhas campanhas", "cria uma campanha", "quanto gastei".
 ---
 
 # Google Ads no agente
 
-Método: **conta de serviço do Google** adicionada como usuária da conta Google Ads (não expira,
-não passa por tela de aprovação de app) + **token de desenvolvedor da conta administradora do
-próprio mentorado**. Você guia o setup (uma vez) e depois opera pela API REST oficial (v25).
-Nada aqui usa credencial da Bravos.
+Método: **conta de serviço do Google** adicionada como usuária da conta Google Ads (não expira, não
+passa por tela de aprovação de app) + **token de desenvolvedor da conta administradora do próprio
+mentorado**. API REST oficial (v25). Nada aqui usa credencial da Bravos.
 
-Dois estágios, e isso precisa ficar claro pra pessoa desde o início:
-- **Estágio 1 (no mesmo dia):** o token nasce no nível "Explorer" e já permite LER tudo
-  (relatórios, campanhas, custos, diagnóstico).
+Divisão de trabalho: **você faz** tudo que dá pra fazer com comando e API (gerar o script de
+criação, ler a chave, descobrir IDs, gravar configuração, testar, diagnosticar). **A pessoa faz**
+só o que exige a conta Google dela: colar um bloco no Cloud Shell, liberar o acesso no Google Ads
+e pegar o token de desenvolvedor. Você conduz uma etapa por vez, verifica cada uma pela API e diz
+com precisão o que falta. Nunca peça pra pessoa "configurar" nada: peça cliques concretos, com o
+link direto.
+
+Dois estágios, avise desde o início:
+- **Estágio 1 (no mesmo dia):** token nasce no nível "Explorer" e já permite LER tudo (relatórios,
+  campanhas, custos, diagnóstico).
 - **Estágio 2 (uns 5 dias úteis):** com o nível "Basic" aprovado pela Google, passa a CRIAR e
   EDITAR (campanhas, grupos, palavras-chave, anúncios, orçamentos).
 
-## FASE 1 — Setup guiado (uma etapa por vez, ~15 min de cliques)
+## FASE 1 — Setup (você executa; a pessoa libera)
 
-Antes de começar: rode `date`, crie a pasta `/data/google-ads` (chmod 700) e grave o helper da
-seção "Helper" deste arquivo em `/data/google-ads/gads.js` (se ainda não existir). Teste com
-`node /data/google-ads/gads.js` (deve imprimir o uso). Só então conduza a pessoa.
+### Etapa 0 — Preparar (só você)
+1. `date`. Crie `/data/google-ads` (chmod 700). Grave o helper da seção "Helper" em
+   `/data/google-ads/gads.js` e confira com `node /data/google-ads/gads.js` (imprime o uso).
+2. Gere um ID de projeto único: `agente-ads-` + 6 caracteres minúsculos/dígitos aleatórios
+   (ex.: `agente-ads-k3m9x2`). Guarde em `/data/google-ads/setup.json` como `project_id`.
+3. Monte o bloco do Cloud Shell abaixo com esse ID e mande pra pessoa junto com a instrução da
+   Etapa 1. Explique em uma frase o que o bloco faz (cria um projeto de tecnologia no Google dela,
+   liga a API do Google Ads, cria um "usuário robô" e gera a chave dele).
 
-### Passo 1 — Projeto no Google Cloud
-Peça pra pessoa acessar console.cloud.google.com (logada no Gmail que administra o Google Ads)
-→ menu do topo → "Novo projeto" → nome livre (ex.: Agente-Ads) → Criar → selecionar o projeto.
+### Etapa 1 — Cloud Shell (a pessoa cola, você lê o resultado)
+Peça: abrir **https://shell.cloud.google.com** no computador, logada no Gmail que administra o
+Google Ads (na 1ª vez aparece um termo pra aceitar e o terminal demora ~30 s pra abrir). Colar o
+bloco inteiro e apertar Enter. Se pedir "Authorize", clicar em Autorizar.
+```bash
+P="agente-ads-XXXXXX"; gcloud projects create "$P" --name="Agente Ads" --quiet \
+&& gcloud config set project "$P" --quiet \
+&& gcloud services enable googleads.googleapis.com --project="$P" --quiet \
+&& gcloud iam service-accounts create agente-ads --display-name="Agente Ads" --project="$P" --quiet \
+&& sleep 5 && gcloud iam service-accounts keys create "$HOME/agente-ads-key.json" \
+   --iam-account="agente-ads@$P.iam.gserviceaccount.com" --project="$P" --quiet \
+&& echo "===== COPIE DAQUI ATE O FIM E MANDE PRO AGENTE =====" && cat "$HOME/agente-ads-key.json"
+```
+A pessoa copia tudo a partir da linha "COPIE DAQUI" e cola pra você (ou baixa o arquivo pelo
+menu ⋮ do Cloud Shell → Download → `agente-ads-key.json` e envia pelo painel).
+Você: salve em `/data/google-ads/sa.json` (chmod 600). NUNCA repita o conteúdo no chat. Confira
+que tem `client_email` e `private_key`. Diga à pessoa o `client_email` (algo como
+`agente-ads@agente-ads-xxxxxx.iam.gserviceaccount.com`): é o "usuário robô" que ela vai liberar.
+Problemas comuns: "already exists" no ID → gere outro ID e repita; "billing" → o Google Ads API
+não exige faturamento, ignore; ela colou só uma parte → peça o bloco de novo, inteiro.
 
-### Passo 2 — Ativar a API
-Menu ☰ → "APIs e serviços" → "Biblioteca" → buscar "Google Ads API" → Ativar.
+### Etapa 2 — Liberar o acesso no Google Ads (a pessoa)
+Link direto: **https://ads.google.com/aw/accountaccess/users** (na conta do negócio; se abrir
+outra conta, trocar pelo seletor no topo). Botão "+" → colar o e-mail do robô → nível de acesso
+**Padrão** → Enviar convite. Como é conta de serviço, o acesso entra na hora.
+Você verifica: ainda não dá pra chamar a API sem o token (Etapa 3), então só confirme que ela
+clicou e siga. Peça também o **ID do cliente** que aparece no topo (formato 123-456-7890) ou
+descubra sozinho na Etapa 4.
 
-### Passo 3 — Conta de serviço e chave
-Menu ☰ → "IAM e administrador" → "Contas de serviço" → "Criar conta de serviço" → nome
-(ex.: agente-ads) → Criar e continuar → PULAR permissões → Concluir. Clique na conta criada →
-aba "Chaves" → "Adicionar chave" → "Criar nova chave" → JSON → Criar. Um .json baixa.
-
-### Passo 4 — Me mandar a chave
-A pessoa envia o .json pelo painel. Salve em `/data/google-ads/sa.json` com chmod 600.
-NUNCA repita o conteúdo no chat. Leia o campo `client_email` e diga esse e-mail à pessoa.
-
-### Passo 5 — Dar acesso à conta Google Ads
-Google Ads (ads.google.com), na conta do negócio → "Administrador" (engrenagem) → "Acesso e
-segurança" → aba "Usuários" → botão "+" → colar o e-mail da conta de serviço → nível de acesso
-**"Padrão"** (basta pra operar campanhas) → Enviar convite. Como é conta de serviço, o acesso
-entra na hora, sem aceite por e-mail. Anote o **ID do cliente** (10 dígitos, canto superior
-direito, formato 123-456-7890) → guarde sem hífens.
-
-### Passo 6 — Conta administradora e token de desenvolvedor
-Explique: o token de desenvolvedor só existe em conta administradora (MCC). É gratuita.
-1. ads.google.com/home/tools/manager-accounts → "Criar conta de administrador" → nome livre.
-2. Dentro da administradora: "Administrador" → "Centro de API" → aceitar os termos → o token
-   aparece (22 caracteres). Guarde.
-3. Vincular a conta do negócio à administradora: na administradora → "Contas" → "+" →
-   "Vincular conta existente" → colar o ID do cliente → a pessoa aceita o convite na conta do
-   negócio (Administrador → Acesso e segurança → Administradores). Anote o **ID da
-   administradora** (também 10 dígitos).
-4. Ainda no Centro de API, peça o **acesso Basic** ("Solicitar acesso básico"): formulário com
+### Etapa 3 — Token de desenvolvedor (a pessoa, com seus links)
+Explique: o token só existe em conta administradora (MCC), que é gratuita.
+1. Criar a administradora: **https://ads.google.com/home/tools/manager-accounts/** → "Criar conta
+   de administrador" → nome livre → Criar.
+2. Pegar o token: dentro da administradora, **https://ads.google.com/aw/apicenter** → aceitar os
+   termos → copiar o token (22 caracteres) e mandar pra você. Guarde em `config.json` (Etapa 4).
+3. Vincular a conta do negócio à administradora: na administradora → "Contas" → "+" → "Vincular
+   conta existente" → colar o ID do cliente → depois, na conta do negócio, aceitar o convite em
+   Administrador → Acesso e segurança → aba "Administradores". Peça o **ID da administradora**
+   (10 dígitos, topo da tela) ou descubra na Etapa 4.
+4. Liberar o robô também na administradora (mesmo caminho da Etapa 2, agora dentro da
+   administradora): isso deixa você operar por toda a hierarquia.
+5. Pedir o **acesso Basic**: ainda no Centro de API → "Solicitar acesso básico" → formulário com o
    site do negócio no ar, e-mail de contato e uso ("gerenciar as próprias campanhas com um
-   agente"). Sem isso o token fica em Explorer: só leitura. A aprovação leva ~5 dias úteis.
+   agente"). Sem isso o token fica em Explorer: só leitura. Aprovação ~5 dias úteis.
 
-### Passo 7 — Gravar a configuração
-Escreva `/data/google-ads/config.json` (chmod 600):
-```json
-{ "developer_token": "XXXX", "customer_id": "1234567890", "login_customer_id": "0987654321",
-  "max_daily_budget_brl": 50, "api_version": "v25" }
-```
-`login_customer_id` = ID da administradora (necessário quando o acesso vem pela hierarquia).
-`max_daily_budget_brl` = teto de orçamento diário que a pessoa aceita; pergunte e grave.
+### Etapa 4 — Configurar e testar (só você)
+1. Grave `/data/google-ads/config.json` (chmod 600) com o que já tem:
+   `{"developer_token":"...","api_version":"v25","max_daily_budget_brl":50}`
+2. Rode `node /data/google-ads/gads.js accounts`: volta a lista de IDs que o robô enxerga.
+   Se vierem dois, o de 10 dígitos que é a administradora vai em `login_customer_id` e o da conta
+   do negócio em `customer_id`; se vier um só, é o `customer_id` (e deixe `login_customer_id` de
+   fora até a vinculação da Etapa 3.3 acontecer). Descubra qual é qual com
+   `search "SELECT customer.id, customer.descriptive_name, customer.manager FROM customer"`
+   (`manager: true` = administradora). Complete o config.json.
+3. Pergunte o teto de orçamento diário que a pessoa aceita e grave em `max_daily_budget_brl`.
+4. Rode `node /data/google-ads/gads.js check`: ele testa token, acesso, leitura e se a escrita
+   está liberada, e imprime um laudo. Traduza o laudo pra pessoa em 3 linhas: o que já funciona,
+   o que falta e o link exato do que falta. Se tudo ok na leitura, confirme citando o nome da
+   conta e a moeda. Repita o `check` sempre que ela disser que fez uma liberação.
 
-### Passo 8 — Testar de verdade
-```
-node /data/google-ads/gads.js accounts
-node /data/google-ads/gads.js search "SELECT customer.descriptive_name, customer.currency_code FROM customer"
-```
-Voltou o nome da conta → conectado. Confirme à pessoa citando o nome da conta e a moeda.
-Erros comuns:
-- `DEVELOPER_TOKEN_NOT_APPROVED` → o token ainda está "Pendente"/Explorer tentando algo além de
-  leitura, ou a conta é de produção com token de teste. Leitura funciona; escrita espera o Basic.
-- `USER_PERMISSION_DENIED` → falta o `login_customer_id` (ID da administradora) ou a conta de
-  serviço não foi adicionada como usuária (Passo 5).
-- `invalid_grant` no token → a API não foi ativada no projeto (Passo 2) ou a chave está errada.
+Erros e o que fazer:
+- `invalid_grant` no token → API não ativada no projeto ou chave errada: repita a Etapa 1.
+- `USER_PERMISSION_DENIED` → robô não liberado na conta (Etapa 2) ou falta `login_customer_id`.
+- `DEVELOPER_TOKEN_NOT_APPROVED` em escrita → token ainda em Explorer: aguardar o Basic (3.5).
+- `DEVELOPER_TOKEN_NOT_APPROVED` em leitura → o token está "Pendente" numa conta de produção;
+  confirme que foi aceito o termo no Centro de API e que a conta não é de teste.
 - `PERMISSION_DENIED ... developer-token` → header ausente: confira o config.json.
 
 ## FASE 2 — Ler e diagnosticar (funciona desde o dia 1)
 
-Sempre por GAQL via `gads.js search "<consulta>"`. Datas: rode `date` antes; a API trabalha com
-`segments.date` e `DURING LAST_7_DAYS`, `LAST_30_DAYS`, `THIS_MONTH`, ou `BETWEEN 'AAAA-MM-DD' AND '...'`.
+Sempre por GAQL via `gads.js search "<consulta>"`. Datas: rode `date` antes; a API usa
+`segments.date DURING LAST_7_DAYS | LAST_30_DAYS | THIS_MONTH` ou `BETWEEN 'AAAA-MM-DD' AND '...'`.
 Valores vêm em micros (R$ 1 = 1.000.000): converta antes de responder.
 
 Consultas prontas:
-- Visão geral:
-  `SELECT campaign.name, campaign.status, metrics.cost_micros, metrics.clicks, metrics.impressions, metrics.conversions FROM campaign WHERE segments.date DURING LAST_7_DAYS ORDER BY metrics.cost_micros DESC`
-- Palavras-chave que gastam sem converter:
-  `SELECT ad_group_criterion.keyword.text, ad_group_criterion.keyword.match_type, metrics.cost_micros, metrics.clicks, metrics.conversions FROM keyword_view WHERE segments.date DURING LAST_30_DAYS AND metrics.clicks > 0 ORDER BY metrics.cost_micros DESC`
+- Visão geral: `SELECT campaign.name, campaign.status, metrics.cost_micros, metrics.clicks, metrics.impressions, metrics.conversions FROM campaign WHERE segments.date DURING LAST_7_DAYS ORDER BY metrics.cost_micros DESC`
+- Palavras que gastam sem converter: `SELECT ad_group_criterion.keyword.text, ad_group_criterion.keyword.match_type, metrics.cost_micros, metrics.clicks, metrics.conversions FROM keyword_view WHERE segments.date DURING LAST_30_DAYS AND metrics.clicks > 0 ORDER BY metrics.cost_micros DESC`
 - Termos de pesquisa reais: `SELECT search_term_view.search_term, metrics.clicks, metrics.cost_micros, metrics.conversions FROM search_term_view WHERE segments.date DURING LAST_30_DAYS ORDER BY metrics.clicks DESC`
 - Orçamentos: `SELECT campaign_budget.name, campaign_budget.amount_micros, campaign.name FROM campaign_budget`
 - Anúncios: `SELECT ad_group_ad.ad.responsive_search_ad.headlines, ad_group_ad.status, ad_group.name FROM ad_group_ad`
@@ -105,8 +123,8 @@ pequeno. Nunca despeje a tabela crua.
 Ordem obrigatória pra uma campanha de Pesquisa nova:
 1. Orçamento: `campaignBudgets:mutate` com `amountMicros` diário (respeitando o teto do config).
 2. Campanha: `campaigns:mutate` com `status: PAUSED`, `advertisingChannelType: SEARCH`,
-   `manualCpc: {}` (ou `maximizeConversions` se houver conversão configurada),
-   `networkSettings` só pesquisa Google, `campaignBudget` do passo 1.
+   `manualCpc: {}` (ou `maximizeConversions` se houver conversão configurada), `networkSettings`
+   só pesquisa Google, `campaignBudget` do passo 1.
 3. Segmentação: `campaignCriteria:mutate` com localização (Brasil = `geoTargetConstants/2076`;
    cidades: buscar em `geo_target_constant`) e idioma português (`languageConstants/1014`).
 4. Grupo: `adGroups:mutate` (`type: SEARCH_STANDARD`, `cpcBidMicros`).
@@ -116,10 +134,10 @@ Ordem obrigatória pra uma campanha de Pesquisa nova:
 7. Só então, com pedido explícito da pessoa, ativar campanha e anúncio (`status: ENABLED`).
 
 Como executar: monte o JSON das operações num arquivo e rode
-`node /data/google-ads/gads.js mutate <service> <arquivo.json>` — sem `--confirm` o helper faz
-só a validação na Google (`validateOnly`) e mostra o que ACONTECERIA. Mostre essa prévia à pessoa
-em linguagem simples (nome, orçamento diário, palavras, títulos) e só repita com `--confirm`
-depois de um "confirma"/"pode criar" explícito na conversa.
+`node /data/google-ads/gads.js mutate <service> <arquivo.json>` — sem `--confirm` o helper faz só
+a validação na Google (`validateOnly`) e mostra o que ACONTECERIA. Mostre essa prévia à pessoa em
+linguagem simples (nome, orçamento diário, palavras, títulos) e só repita com `--confirm` depois
+de um "confirma"/"pode criar" explícito na conversa.
 
 ### Guardas (não são opcionais)
 - Prévia sempre; escrita só com `--confirm` depois do sim da pessoa naquela mensagem.
@@ -134,19 +152,21 @@ depois de um "confirma"/"pode criar" explícito na conversa.
 
 ## Helper — `/data/google-ads/gads.js` (Node 20, sem dependências)
 
-Grave exatamente este conteúdo no arquivo indicado (Fase 1, antes do Passo 1):
+Grave exatamente este conteúdo no arquivo indicado (Etapa 0):
 
 ```js
 #!/usr/bin/env node
 // gads.js — acesso à Google Ads API (REST) com conta de serviço. Sem dependências.
-// uso: gads.js accounts | search "<GAQL>" [customer_id] | mutate <service> <ops.json> [--confirm] [--enable]
 const fs = require('fs'), crypto = require('crypto'), path = require('path');
-const DIR = '/data/google-ads', CFG = path.join(DIR, 'config.json'), SA = path.join(DIR, 'sa.json'), LOG = path.join(DIR, 'log.jsonl');
+const DIR = process.env.GADS_DIR || '/data/google-ads', CFG = path.join(DIR, 'config.json'), SA = path.join(DIR, 'sa.json'), LOG = path.join(DIR, 'log.jsonl');
 const die = (m) => { console.error('ERRO: ' + m); process.exit(1); };
-const USO = 'uso: gads.js accounts | search "<GAQL>" [customer_id] | mutate <service> <ops.json> [--confirm] [--enable]';
+const USO = 'uso: gads.js accounts | check | search "<GAQL>" [customer_id] | mutate <service> <ops.json> [--confirm] [--enable]';
 if (!process.argv[2]) { console.log(USO); process.exit(0); } // uso funciona antes do setup
-if (!fs.existsSync(CFG) || !fs.existsSync(SA)) die('faltam ' + CFG + ' e/ou ' + SA + ' (Fase 1 da skill)');
+if (!fs.existsSync(SA)) die('falta ' + SA + ' (Etapa 1: chave da conta de serviço)');
+if (!fs.existsSync(CFG)) die('falta ' + CFG + ' (Etapa 4: developer_token)');
 const cfg = JSON.parse(fs.readFileSync(CFG, 'utf8')), sa = JSON.parse(fs.readFileSync(SA, 'utf8'));
+if (!sa.client_email || !sa.private_key) die('sa.json sem client_email/private_key: repita a Etapa 1');
+if (!cfg.developer_token) die('config.json sem developer_token (Etapa 3.2)');
 const V = cfg.api_version || 'v25', BASE = 'https://googleads.googleapis.com/' + V;
 const b64 = (o) => Buffer.from(typeof o === 'string' ? o : JSON.stringify(o)).toString('base64url');
 async function token() {
@@ -156,14 +176,14 @@ async function token() {
   const r = await fetch('https://oauth2.googleapis.com/token', { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: 'grant_type=urn%3Aietf%3Aparams%3Aoauth%3Agrant-type%3Ajwt-bearer&assertion=' + jwt + '.' + sig });
   const j = await r.json(); if (!j.access_token) die('token: ' + JSON.stringify(j)); return j.access_token;
 }
-function headers(tk) { const h = { Authorization: 'Bearer ' + tk, 'developer-token': cfg.developer_token, 'Content-Type': 'application/json' }; if (cfg.login_customer_id) h['login-customer-id'] = String(cfg.login_customer_id); return h; }
-async function call(url, body, tk) {
+function headers(tk) { const h = { Authorization: 'Bearer ' + tk, 'developer-token': cfg.developer_token, 'Content-Type': 'application/json' }; if (cfg.login_customer_id) h['login-customer-id'] = String(cfg.login_customer_id).replace(/-/g, ''); return h; }
+async function call(url, body, tk, soft) {
   const r = await fetch(url, { method: body ? 'POST' : 'GET', headers: headers(tk), body: body ? JSON.stringify(body) : undefined });
   const t = await r.text(); let j; try { j = JSON.parse(t); } catch { j = { raw: t }; }
-  if (!r.ok) { const e = (j.error && (j.error.details || [])[0]) || {}; die(`HTTP ${r.status} ${(j.error || {}).message || ''} ${JSON.stringify(e.errors || e).slice(0, 600)}`); }
+  if (!r.ok) { const e = (j.error && (j.error.details || [])[0]) || {}; const msg = `HTTP ${r.status} ${(j.error || {}).message || ''} ${JSON.stringify(e.errors || e).slice(0, 600)}`; if (soft) return { _erro: msg }; die(msg); }
   return j;
 }
-const cid = (x) => String(x || cfg.customer_id).replace(/-/g, '');
+const cid = (x) => String(x || cfg.customer_id || '').replace(/-/g, '');
 function guard(service, ops, enable) {
   const teto = Number(cfg.max_daily_budget_brl || 50);
   for (const op of ops) {
@@ -175,23 +195,34 @@ function guard(service, ops, enable) {
 }
 (async () => {
   const [cmd, a, b, ...rest] = process.argv.slice(2); const flags = new Set([b, ...rest].filter(x => typeof x === 'string' && x.startsWith('--')));
-  if (!['accounts', 'search', 'mutate'].includes(cmd)) die('comando desconhecido: ' + cmd + '\n' + USO);
+  if (!['accounts', 'check', 'search', 'mutate'].includes(cmd)) die('comando desconhecido: ' + cmd + '\n' + USO);
   let ops, confirm;
-  if (cmd === 'mutate') { // guardas ANTES de qualquer rede: teto e status são decididos aqui
+  if (cmd === 'mutate') { // guardas ANTES de qualquer rede
     if (!a || !b || b.startsWith('--')) die('uso: mutate <service> <ops.json> [--confirm] [--enable]');
     ops = JSON.parse(fs.readFileSync(b, 'utf8')); if (!Array.isArray(ops) || !ops.length) die('ops.json precisa ser uma lista de operações');
     confirm = flags.has('--confirm'); guard(a, ops, flags.has('--enable'));
     if (process.env.GADS_DRY === '1') { console.log('GUARDAS OK (GADS_DRY=1, sem rede)'); console.log(JSON.stringify(ops, null, 1)); return; }
+    if (!cid()) die('config.json sem customer_id (Etapa 4.2)');
   }
   const tk = await token();
   if (cmd === 'accounts') { const j = await call(BASE + '/customers:listAccessibleCustomers', null, tk); console.log(JSON.stringify(j, null, 1)); return; }
-  if (cmd === 'search') { if (!a) die('falta a consulta GAQL'); let out = [], pageToken; do { const j = await call(`${BASE}/customers/${cid(b && !b.startsWith('--') ? b : null)}/googleAds:search`, { query: a, pageSize: 1000, pageToken }, tk); out = out.concat(j.results || []); pageToken = j.nextPageToken; } while (pageToken && out.length < 5000); console.log(JSON.stringify(out, null, 1)); return; }
+  if (cmd === 'check') { // laudo das liberações: token → acesso → leitura → escrita
+    const laudo = { token: 'OK (chave da conta de serviço válida)' };
+    const acc = await call(BASE + '/customers:listAccessibleCustomers', null, tk, true);
+    laudo.acesso = acc._erro ? 'FALTA: ' + acc._erro : `OK: robô enxerga ${(acc.resourceNames || []).length} conta(s): ${(acc.resourceNames || []).map(x => x.split('/')[1]).join(', ')}`;
+    if (!cid()) { laudo.leitura = 'PENDENTE: customer_id ausente no config.json (Etapa 4.2)'; console.log(JSON.stringify(laudo, null, 1)); return; }
+    const s = await call(`${BASE}/customers/${cid()}/googleAds:search`, { query: 'SELECT customer.id, customer.descriptive_name, customer.currency_code, customer.manager FROM customer' }, tk, true);
+    laudo.leitura = s._erro ? 'FALTA: ' + s._erro : 'OK: ' + JSON.stringify(((s.results || [])[0] || {}).customer || {});
+    const w = await call(`${BASE}/customers/${cid()}/campaignBudgets:mutate`, { operations: [{ create: { name: 'teste-liberacao-' + Date.now(), amountMicros: '1000000', deliveryMethod: 'STANDARD', explicitlyShared: false } }], validateOnly: true }, tk, true);
+    laudo.escrita = w._erro ? (/DEVELOPER_TOKEN_NOT_APPROVED/.test(w._erro) ? 'AINDA NÃO: token em Explorer (só leitura). Pedir acesso Basic em https://ads.google.com/aw/apicenter' : 'FALTA: ' + w._erro) : 'OK: escrita liberada (validação passou)';
+    console.log(JSON.stringify(laudo, null, 1)); return;
+  }
+  if (cmd === 'search') { if (!a) die('falta a consulta GAQL'); const c = cid(b && !b.startsWith('--') ? b : null); if (!c) die('sem customer_id: passe como 2º argumento ou grave no config.json'); let out = [], pageToken; do { const j = await call(`${BASE}/customers/${c}/googleAds:search`, { query: a, pageSize: 1000, pageToken }, tk); out = out.concat(j.results || []); pageToken = j.nextPageToken; } while (pageToken && out.length < 5000); console.log(JSON.stringify(out, null, 1)); return; }
   if (cmd === 'mutate') {
     const body = { operations: ops, validateOnly: !confirm, partialFailure: false };
     const j = await call(`${BASE}/customers/${cid()}/${a}:mutate`, body, tk);
     fs.appendFileSync(LOG, JSON.stringify({ ts: new Date().toISOString(), service: a, confirm, ops, result: j }) + '\n');
     console.log(confirm ? 'EXECUTADO' : 'PRÉVIA (validateOnly, nada foi alterado)'); console.log(JSON.stringify(j, null, 1)); return;
   }
-  die('comando desconhecido: ' + cmd);
 })().catch(e => die(e.message));
 ```
