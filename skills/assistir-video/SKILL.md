@@ -14,8 +14,8 @@ O mentorado mandou um vídeo (arquivo no WhatsApp/painel) ou um link, e quer que
 
 ## O que dá e o que NÃO dá (fale isso com clareza se for o caso)
 - ✅ **Dá sempre:** vídeo enviado como arquivo (WhatsApp, painel). Esse é o caminho mais garantido.
-- 🟡 **Dá muitas vezes, por link:** link direto de arquivo (.mp4, Google Drive público) e sites públicos que o `yt-dlp` suporta.
-- ⚠️ **TikTok e Reels por link:** essas redes costumam BLOQUEAR download vindo de servidores. Tente o link uma vez; se der erro, não insista: peça pro mentorado salvar o vídeo no celular (TikTok: Compartilhar → Salvar vídeo; Instagram: salvar ou gravar a tela) e te mandar o ARQUIVO aqui.
+- ✅ **Por link:** TikTok, Reels públicos, link direto de arquivo (.mp4, Google Drive público) e a maioria dos sites públicos que o `yt-dlp` suporta.
+- ⚠️ Se um link der erro (as redes mudam de vez em quando), tente atualizar o yt-dlp UMA vez (repita o passo 2 do INSTALL.md); se continuar, peça pro mentorado salvar o vídeo no celular e te mandar o ARQUIVO aqui. Não insista nem tente contornar bloqueio.
 - ❌ **YouTube:** bloqueia downloads vindos de servidores como o seu. Peça o arquivo do vídeo, ou que o mentorado cole a transcrição.
 - ❌ **Cursos fechados (Hotmart, Kiwify, área de membros):** mesmo com usuário e senha, esta skill não entra em plataforma de curso. Diga que não é por aqui e sugira enviar o arquivo da aula, se ele tiver direito de baixar.
 - ❌ **Vídeo privado ou que exige login:** peça o arquivo.
@@ -26,7 +26,7 @@ Trabalhe numa pasta própria: `D=/tmp/video-$(date +%s); mkdir -p $D; cd $D`
 **1. Pegar o vídeo**
 - Se for arquivo: copie pra `$D/v.mp4`.
 - Se for link: `~/.local/bin/yt-dlp -q --no-warnings -o "v.%(ext)s" --merge-output-format mp4 "<link>"`
-- Se falhar, diga com honestidade e de forma simples ("o TikTok bloqueou o download pelo link") e peça o arquivo. Não tente contornar bloqueio.
+- Se falhar, diga com honestidade e de forma simples ("não consegui baixar por esse link") e peça o arquivo. Não tente contornar bloqueio.
 
 **2. Quadros nas mudanças de cena + 1 a cada 2,5 s (com o horário gravado)**
 ```
