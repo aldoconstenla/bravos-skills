@@ -11,7 +11,8 @@ O mentorado mandou um vídeo/áudio (ou apontou um arquivo) e pediu: cortar, jun
 ## Regras de ouro
 1. **Nunca sobrescreva o arquivo original.** Gere sempre um arquivo novo ao lado (sufixo `-editado`).
 2. Confirme o resultado ANTES de entregar: cheque duração/tamanho do arquivo de saída (`ffprobe`).
-3. Vídeo pra WhatsApp: H.264 + AAC, `-movflags +faststart`, alvo abaixo de 16MB quando possível.
+3. **Nada de vídeo fica guardado no servidor.** Depois de ENTREGAR o resultado ao mentorado, apague o original que você recebeu e todos os arquivos de trabalho e de saída (`rm -f ...`). Vídeo lota o servidor compartilhado. Avise o mentorado na entrega: "o vídeo não fica guardado aqui comigo, então salva o seu no celular ou no computador. Se precisar editar de novo, é só me mandar outra vez."
+4. Vídeo pra WhatsApp: H.264 + AAC, `-movflags +faststart`, alvo abaixo de 16MB quando possível.
 
 ## Receitas prontas
 - Cortar do minuto A ao B (sem reencodar, rápido):

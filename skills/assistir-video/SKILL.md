@@ -53,6 +53,10 @@ python3 -c "import json;d=json.load(open('t.json'));[print(f\"[{int(s['start'])/
 - Se a primeira chave der erro de limite, tente a próxima (`-f2`, `-f3`…).
 - Áudio maior que 25 MB: corte em partes de 20 min antes de transcrever.
 
+**4b. Apagar o vídeo JÁ (obrigatório)**
+Depois de gerar as folhas e o `a.mp3`, apague o vídeo na hora: `rm -f $D/v.mp4 $D/v.*`.
+Vídeo ocupa muito espaço, e o servidor é compartilhado. Você não precisa mais dele: tudo o que importa já está nas folhas e na transcrição.
+
 **5. Cruzar e responder**
 Junte fala e imagem pelo horário. Na resposta ao mentorado:
 - do que o vídeo trata, em 1–2 frases;
@@ -64,4 +68,5 @@ Junte fala e imagem pelo horário. Na resposta ao mentorado:
 ## Regras
 - Não invente o que não viu: se um trecho ficou ilegível na folha, diga.
 - Conteúdo de terceiros serve pra estudo e modelagem, nunca pra copiar ou repostar.
-- Apague a pasta temporária no final (`rm -rf $D`), a não ser que o mentorado peça os arquivos.
+- **Nada de vídeo fica guardado no servidor.** Ao terminar, apague a pasta inteira (`rm -rf $D`), inclusive folhas e áudio. Se o vídeo veio como arquivo (WhatsApp ou painel), apague também a cópia que você usou. Se o mentorado quiser guardar algo, entregue o resumo em texto: o vídeo ele já tem.
+- Se ele perguntar, explique: "eu assisto e apago o vídeo em seguida, pra não lotar o servidor. Se precisar de novo, é só me mandar outra vez." 
