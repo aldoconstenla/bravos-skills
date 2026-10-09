@@ -15,5 +15,8 @@ Dependências (confira e diga ao mentorado o que achou):
    Se aparecer "falta", NÃO tente instalar nada como root. Diga ao mentorado: "A edição simples já
    funciona. Pra edição com animação, preciso que a equipe de suporte da Bravos libere umas
    bibliotecas do navegador no meu ambiente (pedido técnico rápido)." e siga só com o Nível 1 até lá.
+   Nota pra equipe de suporte (pacotes apt, sem reiniciar nada): libnss3 libnspr4 libatk1.0-0 libatk-bridge2.0-0
+   libcups2 libxcomposite1 libxdamage1 libgbm1 libxkbcommon0 e o de áudio, que muda de nome conforme o sistema:
+   `libasound2` no Debian 12 (containers) e `libasound2t64` no Ubuntu 24.04 (servidores dedicados).
 4. Não rode render de teste na instalação (é pesado). Confirme ao mentorado em 1-2 frases o que a
    skill faz e que ele já pode pedir.
