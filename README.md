@@ -8,7 +8,7 @@ Catálogo público de **skills** para os agentes de IA dos mentorados NeuroMaste
 2. Copie o comando de instalação mostrado no card.
 3. Cole o comando numa conversa com o **seu agente**. Exemplo:
 
-> Agente, instale a skill **editar-video-ffmpeg** deste repositório: https://github.com/aldoconstenla/bravos-skills — siga o INSTALL.md da skill.
+> Agente, instale a skill **edicao-de-video-com-ia** deste repositório: https://github.com/aldoconstenla/bravos-skills — siga o INSTALL.md da skill.
 
 O agente clona o repositório, valida a origem, copia a skill para a pasta de skills dele e confirma pra você. **Não precisa reiniciar nada** — a skill fica disponível na conversa seguinte.
 
