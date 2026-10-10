@@ -78,7 +78,7 @@ Copie o starter e escreva só o `roteiro.ts`. Regras de direção:
 
 ### Etapa 6: amostra, render e conferência (OBRIGATÓRIA)
 1. Renderize uma amostra de 8 s do meio, olhe os quadros e mande ao mentorado se ele quis aprovar o estilo.
-2. Render completo (receitas §6).
+2. Render completo **em partes, com `--timeout=120000` e `--concurrency` = núcleos do container** (receitas §6). Estime o tempo pela amostra e passe a estimativa ao mentorado.
 3. **Folha de frames do vídeo INTEIRO a 1 quadro por segundo** (receitas §7) e olhe a folha toda. Checklist:
    - [ ] o quadro 0 já mostra o gancho (nada de tela vazia no começo)
    - [ ] nenhum trecho com a mesma imagem por mais de 3 quadros seguidos da folha
@@ -97,7 +97,9 @@ Mande o mp4 e uma mensagem curta:
 Depois, regra 3 (confirmação de download antes de apagar).
 
 ## Armadilhas conhecidas
-- **Memória:** render com `--concurrency 4` no máximo; se `free -m` mostrar menos de 1,5 GB livres, use `--concurrency 2`. Uma coisa pesada por vez.
+- **CPU e memória:** `--concurrency` = núcleos do container (receitas §6, lido do `/sys/fs/cgroup/cpu.max`; o `nproc` engana). Se `free -m` mostrar menos de 1,5 GB livres, use no máximo 2. Uma coisa pesada por vez.
+- **Timeout:** o padrão do Remotion (30 s por quadro) derruba render longo com "Timed out evaluating page function". Use SEMPRE `--timeout=120000` e render em partes (receitas §6).
+- **Demora:** diga ao mentorado "o meu espaço tem pouca capacidade pra render", com a estimativa medida pela amostra. Nunca "o servidor está carregado".
 - **Primeiro render baixa um navegador** (~100 MB) pro cache; se falhar com "lib... not found", veja o INSTALL.md (bibliotecas do navegador).
 - **Fontes** vêm do Google Fonts no render: precisa de internet. Sem internet, troque as fontes por `sans-serif`/`serif`.
 - **Áudio fora de sincronia:** quase sempre é `palavras.json` de um arquivo diferente do `audio.wav`. Os dois têm que sair do MESMO `corte.mp4`.

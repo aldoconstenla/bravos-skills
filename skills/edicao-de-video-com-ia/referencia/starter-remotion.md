@@ -21,7 +21,7 @@ Estrutura:
   "name": "corte-video",
   "private": true,
   "scripts": {
-    "render": "remotion render src/index.ts Corte entregas/corte.mp4 --codec h264 --pixel-format yuv420p --crf 18 --concurrency 4"
+    "render": "remotion render src/index.ts Corte entregas/corte.mp4 --codec h264 --pixel-format yuv420p --crf 18 --concurrency 2 --timeout=120000"
   },
   "dependencies": {
     "@remotion/cli": "4.0.533",

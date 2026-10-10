@@ -81,13 +81,34 @@ ffmpeg -i $P/trab/corte.mp4 -vf "select='gt(scene,0.3)',showinfo" -f null - 2>&1
 (junte os planos com o mesmo concat do passo 2). Plano aberto com pessoa pequena: janela menor
 (ex.: 640×800 a partir do rosto) e depois `scale=760:950`.
 
-## 6. Render
+## 6. Render (SEMPRE em partes, com timeout longo)
 ```bash
 cd $P && npm install --no-audit --no-fund
-npx remotion render src/index.ts Corte entregas/corte.mp4 --codec h264 --pixel-format yuv420p --crf 18 --concurrency 4
+# núcleos que ESTE container pode usar (o nproc mostra os da máquina inteira, não use)
+N=$(awk '{ if ($1=="max") print 2; else { n=int($1/$2); print (n<1?1:n) } }' /sys/fs/cgroup/cpu.max); echo "núcleos: $N"
+OPC="--codec h264 --pixel-format yuv420p --crf 18 --concurrency $N --timeout=120000 --muted"
 ```
-Render leva ~3 a 5× a duração do vídeo. Antes do vídeo inteiro, renderize uma amostra de
-8 s do meio pra validar visual: `--frames=600-840` (e olhe os quadros).
+**Amostra e estimativa (antes do vídeo inteiro):** renderize 8 s do meio (`--frames=600-839`) medindo o tempo:
+```bash
+S=$(date +%s); npx remotion render src/index.ts Corte entregas/amostra.mp4 $OPC --frames=600-839; echo "amostra: $(( $(date +%s)-S )) s pra 240 quadros"
+```
+Tempo total previsto = tempo da amostra × (quadros do vídeo ÷ 240). Passe ESSA estimativa ao mentorado, não um chute.
+
+**Render em partes de 450 quadros (15 s):** se uma parte falhar, só ela é refeita; nunca perde o vídeo inteiro.
+```bash
+TOTAL=1500   # = CONFIG.duracao × 30 (fps)
+mkdir -p trab/partes; : > trab/partes/lista.txt
+for INI in $(seq 0 450 $((TOTAL-1))); do
+  FIM=$(( INI+449 )); [ $FIM -ge $TOTAL ] && FIM=$((TOTAL-1)); F=trab/partes/p$(printf %05d $INI).mp4
+  for t in 1 2 3; do [ -s $F ] && break; npx remotion render src/index.ts Corte $F $OPC --frames=$INI-$FIM || rm -f $F; done
+  [ -s $F ] || { echo "parte $INI falhou 3x"; break; }
+  echo "file '$(basename $F)'" >> trab/partes/lista.txt
+done
+ffmpeg -v error -y -f concat -safe 0 -i trab/partes/lista.txt -i public/audio.wav -map 0:v -map 1:a -c:v copy -c:a aac -b:a 192k -shortest -movflags +faststart entregas/corte.mp4
+```
+Rode o laço em segundo plano (`nohup bash trab/render.sh > trab/render.log 2>&1 &`) e acompanhe pelo log.
+
+**Ao falar da demora com o mentorado:** diga "o meu espaço tem pouca capacidade pra render, por isso demora" e dê a estimativa medida. **Nunca diga "o servidor está carregado"**: quem limita é o seu espaço (os núcleos acima), não o servidor.
 
 ## 7. Folha de frames (conferência obrigatória)
 ```bash
