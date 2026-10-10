@@ -99,6 +99,7 @@ Depois, regra 3 (confirmação de download antes de apagar).
 
 ## Armadilhas conhecidas
 - **CPU e memória:** `--concurrency` = núcleos do container (receitas §6, lido do `/sys/fs/cgroup/cpu.max`; o `nproc` engana). Se `free -m` mostrar menos de 1,5 GB livres, use no máximo 2. Uma coisa pesada por vez.
+- **Partes e pacote:** render em partes de **450 quadros** (nunca menores) e com o projeto **empacotado uma vez** (`remotion bundle`, receitas §6). Partes pequenas e re-empacotar a cada parte custam ~20 s por parte.
 - **Timeout:** o padrão do Remotion (30 s por quadro) derruba render longo com "Timed out evaluating page function". Use SEMPRE `--timeout=120000` e render em partes (receitas §6).
 - **Demora:** diga ao mentorado "o meu espaço tem pouca capacidade pra render", com a estimativa medida pela amostra. Nunca "o servidor está carregado".
 - **Primeiro render baixa um navegador** (~100 MB) pro cache; se falhar com "lib... not found", veja o INSTALL.md (bibliotecas do navegador).

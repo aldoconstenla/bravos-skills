@@ -94,13 +94,17 @@ S=$(date +%s); npx remotion render src/index.ts Corte entregas/amostra.mp4 $OPC 
 ```
 Tempo total previsto = tempo da amostra × (quadros do vídeo ÷ 240). Passe ESSA estimativa ao mentorado, não um chute.
 
-**Render em partes de 450 quadros (15 s):** se uma parte falhar, só ela é refeita; nunca perde o vídeo inteiro.
+**Render em partes de 450 quadros (15 s), empacotando o projeto UMA vez só:** se uma parte falhar, só ela é refeita.
+- **Nunca use partes menores que 450 quadros.** Cada parte tem ~15–20 s fixos (abrir o navegador); 10 partes de 150 já jogam ~3 min fora.
+- **Empacote uma vez** (`remotion bundle`) e renderize todas as partes a partir do pacote. Renderizar de `src/index.ts` re-empacota o projeto a cada parte.
 ```bash
 TOTAL=1500   # = CONFIG.duracao × 30 (fps)
+npx remotion bundle src/index.ts --out-dir trab/bundle && SRC=trab/bundle || SRC=src/index.ts   # se o bundle falhar, segue do src
 mkdir -p trab/partes; : > trab/partes/lista.txt
 for INI in $(seq 0 450 $((TOTAL-1))); do
   FIM=$(( INI+449 )); [ $FIM -ge $TOTAL ] && FIM=$((TOTAL-1)); F=trab/partes/p$(printf %05d $INI).mp4
-  for t in 1 2 3; do [ -s $F ] && break; npx remotion render src/index.ts Corte $F $OPC --frames=$INI-$FIM || rm -f $F; done
+  for t in 1 2 3; do [ -s $F ] && break; npx remotion render $SRC Corte $F $OPC --frames=$INI-$FIM || rm -f $F; done
+  # se a 1ª parte falhar a partir do bundle, volte a usar o src (SRC=src/index.ts) e anote no log
   [ -s $F ] || { echo "parte $INI falhou 3x"; break; }
   echo "file '$(basename $F)'" >> trab/partes/lista.txt
 done
