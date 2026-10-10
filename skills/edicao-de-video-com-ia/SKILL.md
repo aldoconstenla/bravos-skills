@@ -22,6 +22,7 @@ Arquivos de apoio desta skill (leia quando chegar na etapa):
 2. **Confira antes de entregar** (`ffprobe` + olhar quadros). Nunca entregue vídeo que você não viu.
 3. **Espaço do servidor:** depois de entregar, peça "consegue baixar e abrir aí? Me avisa quando tiver salvo, que eu libero o espaço aqui". Só apague (original, trabalho e saída) DEPOIS da confirmação. Sem confirmação, pergunte de novo na próxima conversa.
 4. Entrega pra redes/WhatsApp: H.264 + AAC, `yuv420p`, `-movflags +faststart`.
+5. **Releia esta skill (e as receitas) a CADA corte novo**, mesmo que você já tenha usado na mesma conversa: ela é atualizada. **Não reaproveite scripts e opções de render de cortes anteriores** sem conferir com a versão atual (núcleos, timeout, render em partes, estimativa pela amostra).
 
 ---
 
