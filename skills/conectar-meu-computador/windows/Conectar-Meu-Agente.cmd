@@ -14,7 +14,7 @@ exit /b
 #PS_INICIO#
 $ErrorActionPreference = 'Stop'
 Add-Type -AssemblyName System.Windows.Forms, Microsoft.VisualBasic
-function Aviso($msg, $titulo='Conectar meu agente') { [void][System.Windows.Forms.MessageBox]::Show($msg, $titulo) }
+function Aviso($msg, $titulo='Conectar meu agente') { $f = New-Object System.Windows.Forms.Form -Property @{TopMost=$true}; [void][System.Windows.Forms.MessageBox]::Show($f, $msg, $titulo); $f.Dispose() }
 function Etapa($msg) { Write-Host ""; Write-Host ">> $msg" -ForegroundColor Cyan }
 $base = 'C:\ProgramData\MeuAgente'; New-Item -ItemType Directory -Force -Path $base | Out-Null
 $tmp  = Join-Path $env:TEMP 'meuagente'; New-Item -ItemType Directory -Force -Path $tmp | Out-Null
@@ -149,7 +149,8 @@ while($true){
   $userSsh = ($usuario -split '\\')[-1]
   $volta = [Convert]::ToBase64String([Text.Encoding]::UTF8.GetBytes((@{ ip = $ip; nome = $nome; usuario = $userSsh } | ConvertTo-Json -Compress)))
   Set-Clipboard -Value $volta
-  Aviso ("Pronto! Seu computador esta conectado.`n`nO CODIGO DE RETORNO ja foi copiado.`nVolte no chat do seu agente e cole (Ctrl+V).`n`nCodigo: $volta`n`nPra pausar ou desligar: Desconectar-Meu-Agente.cmd") 'Conectado!'
+  try { Set-Content -Path ([Environment]::GetFolderPath('Desktop') + '\CODIGO-DO-AGENTE.txt') -Value ("Cole este codigo no chat do seu agente:`r`n`r`n" + $volta) -Encoding UTF8 } catch {}
+  Aviso ("Pronto! Seu computador esta conectado.`n`nO CODIGO DE RETORNO ja foi copiado e tambem salvo no arquivo CODIGO-DO-AGENTE.txt na sua Area de Trabalho.`nVolte no chat do seu agente e cole (Ctrl+V).`n`nCodigo: $volta`n`nPra pausar ou desligar: Desconectar-Meu-Agente.cmd") 'Conectado!'
 } catch {
   Aviso ("Nao deu certo nesta etapa:`n`n$($_.Exception.Message)`n`nTire um print desta mensagem e mande pro seu agente.") 'Conectar meu agente - erro'
 }

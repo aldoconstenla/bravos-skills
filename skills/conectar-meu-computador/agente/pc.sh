@@ -8,4 +8,4 @@ O=(-i "$D/chave" -o StrictHostKeyChecking=accept-new -o "UserKnownHostsFile=$D/k
 H="$PC_USER@$PC_IP"
 if [ "$1" = teste ]; then ssh "${O[@]}" "$H" 'powershell -NoProfile -Command "hostname; whoami"'; exit; fi
 if [ "$1" = get ]; then scp -q "${O[@]}" "$H:C:/ProgramData/MeuAgente/io/screen.png" "$2"; exit; fi
-printf '%s\r\n' "$@" | ssh "${O[@]}" "$H" 'powershell -NoProfile -Command "$io=''C:\ProgramData\MeuAgente\io''; Remove-Item $io\result.txt -EA 0; $input | Set-Content $io\cmd.tmp; Move-Item -Force $io\cmd.tmp $io\cmd.txt; for($i=0;$i -lt 300;$i++){ if(Test-Path $io\result.txt){ Start-Sleep -m 50; Get-Content $io\result.txt; break }; Start-Sleep -m 100 }"'
+printf '%s\r\n' "$@" | ssh "${O[@]}" "$H" 'powershell -NoProfile -Command "$io='\''C:\ProgramData\MeuAgente\io'\''; Remove-Item $io\result.txt -EA 0; $input | Set-Content $io\cmd.tmp; Move-Item -Force $io\cmd.tmp $io\cmd.txt; for($i=0;$i -lt 300;$i++){ if(Test-Path $io\result.txt){ Start-Sleep -m 50; Get-Content $io\result.txt; break }; Start-Sleep -m 100 }"'

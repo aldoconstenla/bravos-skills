@@ -40,6 +40,8 @@ A última linha impressa é o **CÓDIGO DE CONEXÃO**. Mande pro dono **só esse
 - "Vai abrir uma janelinha pedindo o código: cola o **CÓDIGO DE CONEXÃO** que eu te mandei e dá OK. Espera de 2 a 5 minutos."
 - "No fim aparece 'Pronto! Seu computador está conectado' e um **CÓDIGO DE RETORNO**. Ele já fica copiado: é só voltar aqui e colar (Ctrl+V)."
 
+**Se o código de retorno não chegar:** NÃO adivinhe o nome de usuário do Windows (tentativas erradas podem travar a conta dele e parecem invasão). Peça um print da janela final, ou que ele abra o arquivo **CODIGO-DO-AGENTE.txt** na Área de Trabalho e cole o conteúdo. Se ele só souber o nome de usuário, peça esse nome exato.
+
 **5. Registre e teste** (você roda):
 ```bash
 bash /data/.claude/skills/conectar-meu-computador/agente/registrar.sh '<CODIGO_DE_RETORNO>'
